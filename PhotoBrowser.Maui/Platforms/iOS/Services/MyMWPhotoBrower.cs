@@ -28,11 +28,28 @@ namespace PhotoBrowsers.Platforms.iOS
 
             foreach (Photo p in _photoBrowser.Photos)
             {
-                MWPhoto mp = MWPhoto.FromUrl(new Foundation.NSUrl(p.URL));
-
+                MWPhoto mp;
+                if (Uri.IsWellFormedUriString(p.URL, UriKind.Absolute) &&
+                    (p.URL.StartsWith("http://") || p.URL.StartsWith("https://")))
+                {
+                    // Remote URL
+                    mp = MWPhoto.FromUrl(new Foundation.NSUrl(p.URL));
+                }
+                else
+                {
+                    // Local file - ensure it exists and load as image
+                    if (File.Exists(p.URL))
+                    {
+                        mp = MWPhoto.FromImage(UIImage.FromFile(p.URL));
+                    }
+                    else
+                    {
+                        // Handle missing file case
+                        mp = MWPhoto.FromImage(UIImage.FromBundle("placeholder.png")); // or handle error
+                    }
+                }
                 if (!string.IsNullOrWhiteSpace(p.Title))
                     mp.Caption = p.Title;
-
                 _photos.Add(mp);
             }
 

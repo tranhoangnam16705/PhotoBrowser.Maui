@@ -52,17 +52,35 @@ namespace PhotoBrowser.Maui.Platforms.Android.ImageGallery
         {
             var galleryImageView = view.FindViewById<Com.Davemorrissey.Labs.Subscaleview.SubsamplingScaleImageView>(Resource.Id.galleryImageView);
             galleryImageView.SetMinimumDpi(MaxZoom);
-
             var imageUrl = _pages[listPosition];
-
             IImageService _imageService = ServiceHelper.GetService<IImageService>();
-
-            ImageService.Instance
+            var activityIndicatorView = view.FindViewById<global::Android.Widget.ProgressBar>(Resource.Id.activityIndicatorView);
+            // Check if it's a local file path or remote URL
+            if (IsLocalFilePath(imageUrl))
+            {
+                // Handle local file
+                if (File.Exists(imageUrl))
+                {
+                    ImageService.Instance
+                        .LoadFile(imageUrl)
+                        .WithCache(FFImageLoading.Cache.CacheType.Disk)
+                        .IntoAsync(new SImageViewTarget(galleryImageView), _imageService);
+                }
+                else
+                {
+                    // Handle missing file - you might want to show a placeholder or error image
+                    // ImageService.Instance.LoadCompiledResource("placeholder").Into(galleryImageView);
+                    activityIndicatorView.Visibility = ViewStates.Gone;
+                }
+            }
+            else
+            {
+                // Handle remote URL
+                ImageService.Instance
                     .LoadUrl(imageUrl)
                     .WithCache(FFImageLoading.Cache.CacheType.Disk)
                     .IntoAsync(new SImageViewTarget(galleryImageView), _imageService);
-
-            var activityIndicatorView = view.FindViewById<global::Android.Widget.ProgressBar>(Resource.Id.activityIndicatorView);
+            }
             if (!galleryImageView.IsImageLoaded)
             {
                 activityIndicatorView.Visibility = ViewStates.Visible;
@@ -75,6 +93,15 @@ namespace PhotoBrowser.Maui.Platforms.Android.ImageGallery
                 }
             };
             galleryImageView.Click += GalleryImageView_Click;
+        }
+
+        private bool IsLocalFilePath(string path)
+        {
+            // Check if it's a local file path (not a URL)
+            return !string.IsNullOrEmpty(path) &&
+                   !path.StartsWith("http://") &&
+                   !path.StartsWith("https://") &&
+                   (path.StartsWith("/") || System.IO.Path.IsPathRooted(path));
         }
 
         private void GalleryImageView_Click(object sender, EventArgs e)
