@@ -1,17 +1,18 @@
-﻿using Android.App;
+using Android.App;
 using Android.Content;
+using Android.Graphics;
+using Android.Graphics.Drawables;
 using Android.OS;
 using Android.Views;
 using Android.Widget;
-using AndroidX.AppCompat.App;
+using AndroidX.Core.View;
 using AndroidX.ViewPager.Widget;
 using PhotoBrowser.Maui.Platforms.Android.ImageGallery;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Resource = Microsoft.Maui.Resource;
+using Color = Android.Graphics.Color;
 
 namespace GPSMobile.BA
 {
@@ -20,19 +21,18 @@ namespace GPSMobile.BA
     {
         private GallerySlidePageAdapter _adapter;
         private ViewPager _viewPager;
+        private Android.Views.View _rootView;
+        private bool _isClosing;
 
         protected Android.Widget.ImageButton btnAction;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
+            RequestWindowFeature(WindowFeatures.NoTitle);
             base.OnCreate(savedInstanceState);
-            var uiOptions =
-                        SystemUiFlags.LayoutFullscreen |
-                        SystemUiFlags.Fullscreen |
-                        SystemUiFlags.LayoutStable |
-                        SystemUiFlags.ImmersiveSticky;
+            SuppressOpenTransition();
 
-            Window.DecorView.SystemUiVisibility = (StatusBarVisibility)uiOptions;
+            ApplyFullscreen();
 
             SetContentView(Resource.Layout.gallery_slide);
             Intent myIntent = this.Intent;
@@ -43,21 +43,93 @@ namespace GPSMobile.BA
                 InitComponents(items.ToList(), startindex);
             }
 
+            _rootView = FindViewById<Android.Views.View>(Resource.Id.lauoutpager);
+            if (_rootView != null)
+            {
+                _rootView.Alpha = 0f;
+                _rootView.Animate().Alpha(1f).SetDuration(220).Start();
+            }
+        }
+
+        private void ApplyFullscreen()
+        {
+            Window.AddFlags(WindowManagerFlags.DrawsSystemBarBackgrounds);
+            // API 35+ ignores these (edge-to-edge is the default) and flags them obsolete.
+            if (!OperatingSystem.IsAndroidVersionAtLeast(35))
+            {
+#pragma warning disable CA1422
+                Window.SetStatusBarColor(Color.Transparent);
+                Window.SetNavigationBarColor(Color.Transparent);
+#pragma warning restore CA1422
+            }
+            Window.SetBackgroundDrawable(new ColorDrawable(Color.Black));
+
+            WindowCompat.SetDecorFitsSystemWindows(Window, false);
+            var insets = WindowCompat.GetInsetsController(Window, Window.DecorView);
+            if (insets != null)
+            {
+                insets.Hide(WindowInsetsCompat.Type.SystemBars());
+                insets.SystemBarsBehavior = WindowInsetsControllerCompat.BehaviorShowTransientBarsBySwipe;
+            }
+        }
+
+        public override void Finish()
+        {
+            if (_isClosing || _rootView == null)
+            {
+                base.Finish();
+                SuppressCloseTransition();
+                return;
+            }
+
+            _isClosing = true;
+            _rootView.Animate().Alpha(0f).SetDuration(180).Start();
+            _rootView.PostDelayed(() =>
+            {
+                base.Finish();
+                SuppressCloseTransition();
+            }, 180);
+        }
+
+        private void SuppressOpenTransition()
+        {
+            if (OperatingSystem.IsAndroidVersionAtLeast(34))
+            {
+                OverrideActivityTransition(Android.App.OverrideTransition.Open, 0, 0);
+            }
+            else
+            {
+#pragma warning disable CA1422
+                OverridePendingTransition(0, 0);
+#pragma warning restore CA1422
+            }
+        }
+
+        private void SuppressCloseTransition()
+        {
+            if (OperatingSystem.IsAndroidVersionAtLeast(34))
+            {
+                OverrideActivityTransition(Android.App.OverrideTransition.Close, 0, 0);
+            }
+            else
+            {
+#pragma warning disable CA1422
+                OverridePendingTransition(0, 0);
+#pragma warning restore CA1422
+            }
         }
 
         protected void InitComponents(List<string> urls, int startindex = 0)
         {
-
             _adapter = new GallerySlidePageAdapter(this, urls);
             _viewPager = FindViewById<ViewPager>(Resource.Id.pager);
             _viewPager.Adapter = _adapter;
-            _viewPager.SetCurrentItem(startindex, false); // start item
+            _viewPager.SetCurrentItem(startindex, false);
             _viewPager.OffscreenPageLimit = 10;
             _viewPager.PageSelected += OnPageSelected;
             _viewPager.PageScrollStateChanged += ViewPager_PageScrollStateChanged;
 
             btnAction = FindViewById<Android.Widget.ImageButton>(Resource.Id.btnclose);
-
             btnAction.Click += (o, e) =>
             {
                 Finish();
@@ -66,17 +138,6 @@ namespace GPSMobile.BA
 
         private void ViewPager_PageScrollStateChanged(object sender, ViewPager.PageScrollStateChangedEventArgs e)
         {
-            //if (e.State == ViewPager.ScrollStateIdle) // pseudo-infinite sliding
-            //{
-            //    var adapter = (InfiniteViewPagerAdapter)_viewPager.Adapter;
-            //    var position = _viewPager.CurrentItem;
-            //    var realPosition = adapter.ToRealPosition(position);
-
-            //    if (position == 0 || position == adapter.Count - 1)
-            //    {
-            //        _viewPager.SetCurrentItem(realPosition + 1, false);
-            //    }
-            //}
         }
 
         private void OnPageSelected(object s, ViewPager.PageSelectedEventArgs e)
