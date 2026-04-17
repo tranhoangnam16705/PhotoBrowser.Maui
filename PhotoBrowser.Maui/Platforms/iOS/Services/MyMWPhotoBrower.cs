@@ -66,7 +66,7 @@ namespace PhotoBrowsers.Platforms.iOS
             browser.SetCurrentPhoto((nuint)_photoBrowser.StartIndex);
 
 
-            var window = UIApplication.SharedApplication.KeyWindow;
+            var window = UIApplication.SharedApplication.GetKeyWindow();
             var vc = window.RootViewController;
             while (vc.PresentedViewController != null)
             {
@@ -82,7 +82,8 @@ namespace PhotoBrowsers.Platforms.iOS
 
         public void Close()
         {
-            UIApplication.SharedApplication.KeyWindow.RootViewController.DismissViewController(true, null);
+            var window = UIApplication.SharedApplication.GetKeyWindow();
+            window.RootViewController.DismissViewController(true, null);
         }
     }
 }

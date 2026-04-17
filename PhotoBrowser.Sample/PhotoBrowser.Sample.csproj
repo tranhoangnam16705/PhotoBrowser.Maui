@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0-android;net9.0-ios</TargetFrameworks>
+		<TargetFrameworks>net10.0-android;net10.0-ios</TargetFrameworks>
 
 
 		<OutputType>Exe</OutputType>
@@ -20,88 +20,20 @@
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">11.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
 
-	</PropertyGroup>
-
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhoneSimulator' ">
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>full</DebugType>
-		<Optimize>false</Optimize>
-		<OutputPath>bin\iPhoneSimulator\Debug</OutputPath>
-		<DefineConstants>DEBUG;ENABLE_TEST_CLOUD;</DefineConstants>
-		<ErrorReport>prompt</ErrorReport>
-		<WarningLevel>4</WarningLevel>
-		<CodesignKey>iPhone Developer</CodesignKey>
-		<MtouchDebug>true</MtouchDebug>
-		<MtouchNoSymbolStrip>true</MtouchNoSymbolStrip>
-		<MtouchFastDev>true</MtouchFastDev>
-		<MtouchProfiling>true</MtouchProfiling>
-		<IOSDebuggerPort>62315</IOSDebuggerPort>
-		<MtouchLink>SdkOnly</MtouchLink>
-		<MtouchArch>x86_64</MtouchArch>
-		<MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
-		<DeviceSpecificBuild>false</DeviceSpecificBuild>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
-		<DebugType>pdbonly</DebugType>
-		<Optimize>true</Optimize>
-		<OutputPath>bin\iPhone\Release</OutputPath>
-		<DefineConstants></DefineConstants>
-		<ErrorReport>prompt</ErrorReport>
-		<WarningLevel>4</WarningLevel>
-		<CodesignKey>iPhone Developer</CodesignKey>
-		<MtouchFloat32>true</MtouchFloat32>
-		<CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
-		<MtouchLink>SdkOnly</MtouchLink>
-		<MtouchArch>ARM64</MtouchArch>
-		<MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhoneSimulator' ">
-		<DebugType>pdbonly</DebugType>
-		<Optimize>true</Optimize>
-		<OutputPath>bin\iPhoneSimulator\Release</OutputPath>
-		<DefineConstants></DefineConstants>
-		<ErrorReport>prompt</ErrorReport>
-		<WarningLevel>4</WarningLevel>
-		<CodesignKey>iPhone Developer</CodesignKey>
-		<MtouchNoSymbolStrip>true</MtouchNoSymbolStrip>
-		<MtouchLink>None</MtouchLink>
-		<MtouchArch>x86_64</MtouchArch>
-		<MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhone' ">
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>full</DebugType>
-		<Optimize>false</Optimize>
-		<OutputPath>bin\iPhone\Debug</OutputPath>
-		<DefineConstants>DEBUG;ENABLE_TEST_CLOUD;</DefineConstants>
-		<ErrorReport>prompt</ErrorReport>
-		<WarningLevel>4</WarningLevel>
-		<CodesignKey>iPhone Developer</CodesignKey>
-		<DeviceSpecificBuild>true</DeviceSpecificBuild>
-		<MtouchDebug>true</MtouchDebug>
-		<MtouchNoSymbolStrip>true</MtouchNoSymbolStrip>
-		<MtouchFastDev>true</MtouchFastDev>
-		<MtouchProfiling>true</MtouchProfiling>
-		<MtouchFloat32>true</MtouchFloat32>
-		<CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
-		<IOSDebuggerPort>55951</IOSDebuggerPort>
-		<MtouchLink>SdkOnly</MtouchLink>
-		<MtouchArch>ARM64</MtouchArch>
-		<MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
 	</PropertyGroup>
 	
-	<ItemGroup Condition="$(TargetFramework.StartsWith('net9.0-ios')) != true ">
+	<ItemGroup Condition="$(TargetFramework.StartsWith('net10.0-ios')) != true ">
 		<Compile Remove="Platforms\iOS\*.cs" />
 	</ItemGroup>
 
-	<ItemGroup Condition="$(TargetFramework.StartsWith('net9.0-android')) != true ">
+	<ItemGroup Condition="$(TargetFramework.StartsWith('net10.0-android')) != true ">
 		<Compile Remove="Platforms\Android\*.cs" />
 	</ItemGroup>
 
-	<ItemGroup Condition="$(TargetFramework.StartsWith('net9.0-ios')) == true OR $(TargetFramework.StartsWith('net9.0-android')) == true">
+	<ItemGroup Condition="$(TargetFramework.StartsWith('net10.0-ios')) == true OR $(TargetFramework.StartsWith('net10.0-android')) == true">
 		<Compile Remove="**\*.Standard.cs" />
 		<Compile Remove="**\Standard\**\*.cs" />
 	</ItemGroup>
@@ -129,9 +61,9 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.120" />
-		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.120" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.10" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.51" />
+		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.51" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.6" />
 	</ItemGroup>
 
 	<ItemGroup>
