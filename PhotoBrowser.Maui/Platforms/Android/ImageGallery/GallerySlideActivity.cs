@@ -32,7 +32,7 @@ namespace GPSMobile.BA
             base.OnCreate(savedInstanceState);
             SuppressOpenTransition();
 
-            ApplyFullscreen();
+            ApplyWindowStyle();
 
             SetContentView(Resource.Layout.gallery_slide);
             Intent myIntent = this.Intent;
@@ -46,15 +46,32 @@ namespace GPSMobile.BA
             _rootView = FindViewById<Android.Views.View>(Resource.Id.lauoutpager);
             if (_rootView != null)
             {
+                ViewCompat.SetOnApplyWindowInsetsListener(_rootView, new SystemBarsInsetApplier());
                 _rootView.Alpha = 0f;
                 _rootView.Animate().Alpha(1f).SetDuration(220).Start();
             }
         }
 
-        private void ApplyFullscreen()
+        private sealed class SystemBarsInsetApplier : Java.Lang.Object, IOnApplyWindowInsetsListener
+        {
+            public WindowInsetsCompat OnApplyWindowInsets(Android.Views.View v, WindowInsetsCompat insets)
+            {
+                var bars = insets.GetInsets(WindowInsetsCompat.Type.SystemBars());
+                v.SetPadding(bars.Left, bars.Top, bars.Right, bars.Bottom);
+                return insets;
+            }
+        }
+
+        private void ApplyWindowStyle()
         {
             Window.AddFlags(WindowManagerFlags.DrawsSystemBarBackgrounds);
-            // API 35+ ignores these (edge-to-edge is the default) and flags them obsolete.
+            Window.SetBackgroundDrawable(new ColorDrawable(Color.Black));
+
+            // Force edge-to-edge on every API level; the root view pads itself via the
+            // insets listener in OnCreate. API 35+ is edge-to-edge by default anyway.
+            WindowCompat.SetDecorFitsSystemWindows(Window, false);
+
+            // Transparent bars so the black window background shows through.
             if (!OperatingSystem.IsAndroidVersionAtLeast(35))
             {
 #pragma warning disable CA1422
@@ -62,14 +79,12 @@ namespace GPSMobile.BA
                 Window.SetNavigationBarColor(Color.Transparent);
 #pragma warning restore CA1422
             }
-            Window.SetBackgroundDrawable(new ColorDrawable(Color.Black));
 
-            WindowCompat.SetDecorFitsSystemWindows(Window, false);
             var insets = WindowCompat.GetInsetsController(Window, Window.DecorView);
             if (insets != null)
             {
-                insets.Hide(WindowInsetsCompat.Type.SystemBars());
-                insets.SystemBarsBehavior = WindowInsetsControllerCompat.BehaviorShowTransientBarsBySwipe;
+                insets.AppearanceLightStatusBars = false;
+                insets.AppearanceLightNavigationBars = false;
             }
         }
 
