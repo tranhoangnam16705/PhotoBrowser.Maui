@@ -18,10 +18,12 @@ namespace PhotoBrowsers.Platforms.Android
     {
         public void Show(PhotoBrowser photoBrowser)
         {
+            PhotoBrowserCallbacks.Current = photoBrowser;
             Intent intent = new Intent(Application.Context, typeof(GallerySlideActivity));
             intent.AddFlags(ActivityFlags.NewTask);
             Bundle b = new Bundle();
             b.PutStringArrayList("PhotoBrowser", photoBrowser.Photos.Select(x => x.URL).ToArray());
+            b.PutStringArrayList("PhotoBrowserTitles", photoBrowser.Photos.Select(x => x.Title ?? string.Empty).ToArray());
             b.PutInt("PhotoBrowserIndex", photoBrowser.StartIndex);
             intent.PutExtras(b);
             Application.Context.StartActivity(intent);

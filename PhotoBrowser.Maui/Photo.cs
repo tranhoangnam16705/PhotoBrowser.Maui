@@ -21,6 +21,10 @@
 
         public int StartIndex { get; set; } = 0;
 
+        public event EventHandler<int> PageChanged;
+
+        public event EventHandler Closed;
+
         public void Show()
         {
             ServiceHelpers.GetService<IPhotoBrowser>().Show(this);
@@ -30,5 +34,9 @@
         {
             ServiceHelpers.GetService<IPhotoBrowser>().Close();
         }
+
+        internal void RaisePageChanged(int index) => PageChanged?.Invoke(this, index);
+
+        internal void RaiseClosed() => Closed?.Invoke(this, EventArgs.Empty);
     }
 }

@@ -17,6 +17,9 @@ namespace PhotoBrowsers.Platforms.iOS
 
         protected List<MWPhoto> _photos = new List<MWPhoto>();
 
+        private int _lastFiredIndex = -1;
+        private bool _closedFired;
+
         public MyMWPhotoBrower(PhotoBrowser photoBrowser)
         {
             _photoBrowser = photoBrowser;
@@ -80,10 +83,27 @@ namespace PhotoBrowsers.Platforms.iOS
 
         public override nuint NumberOfPhotosInPhotoBrowser(MWPhotoBrowser photoBrowser) => (nuint)_photos.Count;
 
+        public override void DidDisplayPhoto(MWPhotoBrowser photoBrowser, nuint index)
+        {
+            var i = (int)index;
+            if (_lastFiredIndex == i) return;
+            _lastFiredIndex = i;
+            _photoBrowser?.RaisePageChanged(i);
+        }
+
+        public override void DidFinishModalPresentation(MWPhotoBrowser photoBrowser) => RaiseClosedOnce();
+
         public void Close()
         {
             var window = UIApplication.SharedApplication.GetKeyWindow();
-            window.RootViewController.DismissViewController(true, null);
+            window.RootViewController.DismissViewController(true, RaiseClosedOnce);
+        }
+
+        private void RaiseClosedOnce()
+        {
+            if (_closedFired) return;
+            _closedFired = true;
+            _photoBrowser?.RaiseClosed();
         }
     }
 }

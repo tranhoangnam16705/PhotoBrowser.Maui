@@ -8,6 +8,7 @@ using Android.Widget;
 using AndroidX.Core.View;
 using AndroidX.ViewPager.Widget;
 using PhotoBrowser.Maui.Platforms.Android.ImageGallery;
+using PhotoBrowsers.Platforms.Android;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,10 @@ namespace GPSMobile.BA
         private GallerySlidePageAdapter _adapter;
         private ViewPager _viewPager;
         private Android.Views.View _rootView;
+        private TextView _tvPageIndicator;
+        private TextView _tvPhotoTitle;
+        private IList<string> _titles;
+        private int _lastFiredIndex = -1;
         private bool _isClosing;
 
         protected Android.Widget.ImageButton btnAction;
@@ -38,6 +43,8 @@ namespace GPSMobile.BA
             Intent myIntent = this.Intent;
             var startindex = myIntent.GetIntExtra("PhotoBrowserIndex", 0);
             var items = myIntent.GetStringArrayListExtra("PhotoBrowser");
+            var titles = myIntent.GetStringArrayListExtra("PhotoBrowserTitles");
+            _titles = titles?.ToList() ?? new List<string>();
             if (items != null && items.Count > 0)
             {
                 InitComponents(items.ToList(), startindex);
@@ -144,11 +151,46 @@ namespace GPSMobile.BA
             _viewPager.PageSelected += OnPageSelected;
             _viewPager.PageScrollStateChanged += ViewPager_PageScrollStateChanged;
 
+            _tvPageIndicator = FindViewById<TextView>(Resource.Id.tvPageIndicator);
+            _tvPhotoTitle = FindViewById<TextView>(Resource.Id.tvPhotoTitle);
+            UpdateChrome(startindex, urls.Count);
+            FirePageChanged(startindex);
+
             btnAction = FindViewById<Android.Widget.ImageButton>(Resource.Id.btnclose);
             btnAction.Click += (o, e) =>
             {
                 Finish();
             };
+        }
+
+        private void UpdateChrome(int position, int total)
+        {
+            if (_tvPageIndicator != null)
+            {
+                if (total > 1)
+                {
+                    _tvPageIndicator.Text = $"{position + 1} / {total}";
+                    _tvPageIndicator.Visibility = ViewStates.Visible;
+                }
+                else
+                {
+                    _tvPageIndicator.Visibility = ViewStates.Gone;
+                }
+            }
+
+            if (_tvPhotoTitle != null)
+            {
+                var title = position >= 0 && position < (_titles?.Count ?? 0) ? _titles[position] : null;
+                if (!string.IsNullOrWhiteSpace(title))
+                {
+                    _tvPhotoTitle.Text = title;
+                    _tvPhotoTitle.Visibility = ViewStates.Visible;
+                }
+                else
+                {
+                    _tvPhotoTitle.Visibility = ViewStates.Gone;
+                }
+            }
         }
 
         private void ViewPager_PageScrollStateChanged(object sender, ViewPager.PageScrollStateChangedEventArgs e)
@@ -157,6 +199,24 @@ namespace GPSMobile.BA
 
         private void OnPageSelected(object s, ViewPager.PageSelectedEventArgs e)
         {
+            UpdateChrome(e.Position, _adapter?.Count ?? 0);
+            FirePageChanged(e.Position);
+        }
+
+        private void FirePageChanged(int index)
+        {
+            if (_lastFiredIndex == index) return;
+            _lastFiredIndex = index;
+            PhotoBrowserCallbacks.PageChanged(index);
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            if (IsFinishing)
+            {
+                PhotoBrowserCallbacks.Closed();
+            }
         }
     }
 }
