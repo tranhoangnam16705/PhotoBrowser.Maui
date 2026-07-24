@@ -19,6 +19,7 @@ namespace PhotoBrowsers.Platforms.iOS
 
         private int _lastFiredIndex = -1;
         private bool _closedFired;
+        private UINavigationController _navigationController;
 
         public MyMWPhotoBrower(PhotoBrowser photoBrowser)
         {
@@ -75,8 +76,9 @@ namespace PhotoBrowsers.Platforms.iOS
             {
                 vc = vc.PresentedViewController;
             }
+            _navigationController = new UINavigationController(browser);
 
-            vc.PresentViewController(new UINavigationController(browser), true, null);
+            vc.PresentViewController(_navigationController, true, null);
         }
 
         public override MWPhoto GetPhoto(MWPhotoBrowser photoBrowser, nuint index) => _photos[(int)index];
@@ -91,12 +93,11 @@ namespace PhotoBrowsers.Platforms.iOS
             _photoBrowser?.RaisePageChanged(i);
         }
 
-        public override void DidFinishModalPresentation(MWPhotoBrowser photoBrowser) => RaiseClosedOnce();
+        public override void DidFinishModalPresentation(MWPhotoBrowser photoBrowser) => Close();
 
         public void Close()
         {
-            var window = UIApplication.SharedApplication.GetKeyWindow();
-            window.RootViewController.DismissViewController(true, RaiseClosedOnce);
+            _navigationController?.DismissViewController(true, RaiseClosedOnce);
         }
 
         private void RaiseClosedOnce()
